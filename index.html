@@ -119,10 +119,14 @@
         <div id="multiplication-grid"></div>
         <div id="question"></div>
         <input type="number" id="answer" placeholder="Your answer" />
-        <button onclick="submitAnswer()" style="padding: 10px 20px; margin-top: 10px;">Submit</button>
+        <button id="submit-button" onclick="submitAnswer()" style="padding: 10px 20px; margin-top: 10px;">Submit</button>
         <div id="result"></div>
         <div id="incorrect-answers"></div>
     </div>
+
+    <audio id="background-song" src="https://github.com/MarcusRandevik/marcusrandevik.github.io/blob/main/Multiplication-Groove.mp3?raw=true"></audio>
+    <audio id="correct-sound" src="https://github.com/MarcusRandevik/marcusrandevik.github.io/blob/main/correct-156911.mp3?raw=true"></audio>
+    <audio id="incorrect-sound" src="https://github.com/MarcusRandevik/marcusrandevik.github.io/blob/main/error-10-206498.mp3?raw=true"></audio>
 
     <script>
         let score = 0;
@@ -137,6 +141,9 @@
         const startButton = document.getElementById('start-button');
         const numberSelection = document.getElementById('number-selection');
         const answeredQuestions = new Set();
+        const backgroundSong = document.getElementById('background-song');
+        const correctSound = document.getElementById('correct-sound');
+        const incorrectSound = document.getElementById('incorrect-sound');
         let totalQuestions;
         let incorrectAnswers = [];
 
@@ -148,7 +155,7 @@
             for (let i = 1; i <= 10; i++) {
                 const header = document.createElement('div');
                 header.classList.add('column-header');
-                if (!selectedNumbers.includes(i)) {
+                if (selectedNumbers.includes(i)) {
                     header.style.fontWeight = 'bold';
                 } else {
                     header.classList.add('faded-text');
@@ -170,7 +177,7 @@
                     box.classList.add('multiplication-box');
                     box.id = `box-${i}-${j}`;
                     box.innerText = `${i}x${j}`;
-                    if (!selectedNumbers.includes(i) || !selectedNumbers.includes(j)) {
+                    if (!selectedNumbers.includes(j)) {
                         box.classList.add('faded');
                     }
                     if (window.innerWidth <= 600) {
@@ -186,8 +193,12 @@
             if (box) {
                 if (correct) {
                     box.classList.add('correct');
+                    correctSound.pause()
+                    correctSound.currentTime = 0;
+                    correctSound.play();
                 } else {
                     box.classList.add('incorrect');
+                    incorrectSound.play();
                     incorrectAnswers.push(`${num1} x ${num2} = ${num1 * num2} (Your answer: ${userAnswer})`);
                 }
                 answeredQuestions.add(`${num1}-${num2}`);
@@ -203,7 +214,7 @@
             const selectedNumbers = getSelectedNumbers();
             if (answeredQuestions.size < totalQuestions && selectedNumbers.length > 0) {
                 do {
-                    num1 = selectedNumbers[Math.floor(Math.random() * selectedNumbers.length)];
+                    num1 = Math.floor(Math.random() * 10 + 1);
                     num2 = selectedNumbers[Math.floor(Math.random() * selectedNumbers.length)];
                 } while (answeredQuestions.has(`${num1}-${num2}`));
 
@@ -211,14 +222,15 @@
                 answerInput.focus();
             } else {
                 stopTimer();
+                backgroundSong.volume = 0.3
                 document.getElementById('question').innerText = 'Game over!';
                 document.getElementById('result').innerText = `You got ${score} out of ${totalQuestions} questions right.`;
                 if (incorrectAnswers.length > 0) {
                     document.getElementById('incorrect-answers').innerHTML = '<h3>Incorrect Answers:</h3>' + incorrectAnswers.join('<br>');
                 }
                 answerInput.style.display = 'none';
-                document.querySelector('button').innerText = 'Restart';
-                document.querySelector('button').onclick = restartGame;
+                document.querySelector('submit-button').innerText = 'Restart';
+                document.querySelector('submit-button').onclick = restartGame;
             }
         }
 
@@ -245,7 +257,7 @@
 
         function startGame() {
             const selectedNumbers = getSelectedNumbers();
-            totalQuestions = selectedNumbers.length * selectedNumbers.length;
+            totalQuestions = selectedNumbers.length * 10;
             startButton.style.display = 'none';
             document.getElementById('settings').style.display = 'none';
             gameElements.style.display = 'flex';
@@ -260,6 +272,9 @@
                     submitAnswer();
                 }
             });
+
+            backgroundSong.loop = true;
+            backgroundSong.play()
         }
 
         function updateTimer() {
@@ -279,8 +294,8 @@
             document.getElementById('result').innerText = '';
             document.getElementById('incorrect-answers').innerText = '';
             answerInput.style.display = 'block';
-            document.querySelector('button').innerText = 'Submit';
-            document.querySelector('button').onclick = submitAnswer;
+            document.querySelector('submit-button').innerText = 'Submit';
+            document.querySelector('submit-button').onclick = submitAnswer;
             document.querySelectorAll('.multiplication-box').forEach(box => box.classList.remove('correct', 'incorrect'));
             startGame();
         }
