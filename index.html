@@ -16,13 +16,13 @@
         }
         #multiplication-grid {
             display: grid;
-            grid-template-columns: 40px repeat(10, 60px);
-            gap: 10px;
+            grid-template-columns: 30px repeat(10, 45px);
+            gap: 7px;
             margin-bottom: 20px;
         }
         .multiplication-box {
-            width: 60px;
-            height: 60px;
+            width: 45px;
+            height: 45px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -42,15 +42,20 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            width: 60px;
-            height: 60px;
+            width: 45px;
+            height: 45px;
             background-color: transparent;
-            color: black;
+            color: #a0a0a0;
         }
         .faded {
             color: #a0a0a0;
             font-weight: normal;
             background-color: #e0e0e0;
+        }
+        .faded-text {
+            color: #a0a0a0;
+            font-weight: normal;
+            background-color: transparent;
         }
         #question {
             font-size: 1.5em;
@@ -67,6 +72,27 @@
             display: none;
             flex-direction: column;
             align-items: center;
+        }
+        #incorrect-answers {
+            margin-top: 20px;
+            color: #f08080;
+        }
+
+        @media (max-width: 600px) {
+            .multiplication-box {
+                width: 30px;
+                height: 30px;
+                font-size: 0;
+            }
+            .row-header, .column-header {
+                width: 30px;
+                height: 30px;
+                font-size: 0.8em;
+            }
+            #multiplication-grid {
+                gap: 5px;
+                grid-template-columns: 20px repeat(10, 30px);
+            }
         }
     </style>
 </head>
@@ -95,6 +121,7 @@
         <input type="number" id="answer" placeholder="Your answer" />
         <button onclick="submitAnswer()" style="padding: 10px 20px; margin-top: 10px;">Submit</button>
         <div id="result"></div>
+        <div id="incorrect-answers"></div>
     </div>
 
     <script>
@@ -111,6 +138,7 @@
         const numberSelection = document.getElementById('number-selection');
         const answeredQuestions = new Set();
         let totalQuestions;
+        let incorrectAnswers = [];
 
         function createGrid(selectedNumbers) {
             grid.innerHTML = '';
@@ -120,10 +148,10 @@
             for (let i = 1; i <= 10; i++) {
                 const header = document.createElement('div');
                 header.classList.add('column-header');
-                if (selectedNumbers.includes(i)) {
+                if (!selectedNumbers.includes(i)) {
                     header.style.fontWeight = 'bold';
                 } else {
-                    header.classList.add('faded');
+                    header.classList.add('faded-text');
                 }
                 header.innerText = i;
                 grid.appendChild(header);
@@ -142,21 +170,25 @@
                     box.classList.add('multiplication-box');
                     box.id = `box-${i}-${j}`;
                     box.innerText = `${i}x${j}`;
-                    if (!selectedNumbers.includes(j)) {
+                    if (!selectedNumbers.includes(i) || !selectedNumbers.includes(j)) {
                         box.classList.add('faded');
+                    }
+                    if (window.innerWidth <= 600) {
+                        box.innerText = '';
                     }
                     grid.appendChild(box);
                 }
             }
         }
 
-        function highlightBox(num1, num2, correct) {
+        function highlightBox(num1, num2, correct, userAnswer) {
             const box = document.getElementById(`box-${num1}-${num2}`);
             if (box) {
                 if (correct) {
                     box.classList.add('correct');
                 } else {
                     box.classList.add('incorrect');
+                    incorrectAnswers.push(`${num1} x ${num2} = ${num1 * num2} (Your answer: ${userAnswer})`);
                 }
                 answeredQuestions.add(`${num1}-${num2}`);
             }
@@ -181,6 +213,9 @@
                 stopTimer();
                 document.getElementById('question').innerText = 'Game over!';
                 document.getElementById('result').innerText = `You got ${score} out of ${totalQuestions} questions right.`;
+                if (incorrectAnswers.length > 0) {
+                    document.getElementById('incorrect-answers').innerHTML = '<h3>Incorrect Answers:</h3>' + incorrectAnswers.join('<br>');
+                }
                 answerInput.style.display = 'none';
                 document.querySelector('button').innerText = 'Restart';
                 document.querySelector('button').onclick = restartGame;
@@ -197,7 +232,7 @@
                     highlightBox(num1, num2, true);
                 } else {
                     document.getElementById('result').innerText = `Incorrect! The correct answer was ${correctAnswer}.`;
-                    highlightBox(num1, num2, false);
+                    highlightBox(num1, num2, false, userAnswer);
                 }
                 currentQuestion++;
                 answerInput.value = '';
@@ -216,6 +251,7 @@
             gameElements.style.display = 'flex';
             startTime = Date.now();
             timerInterval = setInterval(updateTimer, 1000);
+            incorrectAnswers = [];
             createGrid(selectedNumbers);
             generateQuestion();
             answerInput.focus();
@@ -239,7 +275,9 @@
             score = 0;
             currentQuestion = 0;
             answeredQuestions.clear();
+            incorrectAnswers = [];
             document.getElementById('result').innerText = '';
+            document.getElementById('incorrect-answers').innerText = '';
             answerInput.style.display = 'block';
             document.querySelector('button').innerText = 'Submit';
             document.querySelector('button').onclick = submitAnswer;
