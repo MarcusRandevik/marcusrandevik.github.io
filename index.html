@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplication Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        #multiplication-grid {
+            display: grid;
+            grid-template-columns: 40px repeat(10, 60px);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .multiplication-box {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #d3d3d3;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .correct {
+            background-color: #90ee90;
+        }
+        .incorrect {
+            background-color: #f08080;
+        }
+        .row-header, .column-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            width: 60px;
+            height: 60px;
+            background-color: transparent;
+            color: black;
+        }
+        .faded {
+            color: #a0a0a0;
+            font-weight: normal;
+            background-color: #e0e0e0;
+        }
+        .faded-text {
+            color: #a0a0a0;
+            font-weight: normal;
+            background-color: transparent;
+        }
+        #question {
+            font-size: 1.5em;
+            margin: 20px;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        #timer {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        #game-elements {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        #incorrect-answers {
+            margin-top: 20px;
+            color: #f08080;
+        }
+    </style>
+</head>
+<body>
+    <h1>Multiplication Game</h1>
+    <div id="settings">
+        <h3>Select numbers to include:</h3>
+        <div id="number-selection">
+            <label><input type="checkbox" value="1" checked> 1</label>
+            <label><input type="checkbox" value="2" checked> 2</label>
+            <label><input type="checkbox" value="3" checked> 3</label>
+            <label><input type="checkbox" value="4" checked> 4</label>
+            <label><input type="checkbox" value="5" checked> 5</label>
+            <label><input type="checkbox" value="6" checked> 6</label>
+            <label><input type="checkbox" value="7" checked> 7</label>
+            <label><input type="checkbox" value="8" checked> 8</label>
+            <label><input type="checkbox" value="9" checked> 9</label>
+            <label><input type="checkbox" value="10" checked> 10</label>
+        </div>
+    </div>
+    <button id="start-button" onclick="startGame()">Start Game</button>
+    <div id="timer"></div>
+    <div id="game-elements">
+        <div id="multiplication-grid"></div>
+        <div id="question"></div>
+        <input type="number" id="answer" placeholder="Your answer" />
+        <button onclick="submitAnswer()" style="padding: 10px 20px; margin-top: 10px;">Submit</button>
+        <div id="result"></div>
+        <div id="incorrect-answers"></div>
+    </div>
+
+    <script>
+        let score = 0;
+        let currentQuestion = 0;
+        let num1, num2;
+        let timerInterval;
+        let startTime;
+        const grid = document.getElementById('multiplication-grid');
+        const answerInput = document.getElementById('answer');
+        const timerElement = document.getElementById('timer');
+        const gameElements = document.getElementById('game-elements');
+        const startButton = document.getElementById('start-button');
+        const numberSelection = document.getElementById('number-selection');
+        const answeredQuestions = new Set();
+        let totalQuestions;
+        let incorrectAnswers = [];
+
+        function createGrid(selectedNumbers) {
+            grid.innerHTML = '';
+
+            // Create column headers
+            grid.appendChild(document.createElement('div')); // Empty top-left corner
+            for (let i = 1; i <= 10; i++) {
+                const header = document.createElement('div');
+                header.classList.add('column-header');
+                if (selectedNumbers.includes(i)) {
+                    header.style.fontWeight = 'bold';
+                } else {
+                    header.classList.add('faded-text');
+                }
+                header.innerText = i;
+                grid.appendChild(header);
+            }
+
+            // Create rows with headers and boxes
+            for (let i = 1; i <= 10; i++) {
+                const rowHeader = document.createElement('div');
+                rowHeader.classList.add('row-header');
+                if (selectedNumbers.includes(i)) {
+                    rowHeader.style.fontWeight = 'bold';
+                } else {
+                    rowHeader.classList.add('faded-text');
+                }
+                rowHeader.innerText = i;
+                grid.appendChild(rowHeader);
+
+                for (let j = 1; j <= 10; j++) {
+                    const box = document.createElement('div');
+                    box.classList.add('multiplication-box');
+                    box.id = `box-${i}-${j}`;
+                    box.innerText = `${i}x${j}`;
+                    if (!selectedNumbers.includes(i) || !selectedNumbers.includes(j)) {
+                        box.classList.add('faded');
+                    }
+                    grid.appendChild(box);
+                }
+            }
+        }
+
+        function highlightBox(num1, num2, correct, userAnswer) {
+            const box = document.getElementById(`box-${num1}-${num2}`);
+            if (box) {
+                if (correct) {
+                    box.classList.add('correct');
+                } else {
+                    box.classList.add('incorrect');
+                    incorrectAnswers.push(`${num1} x ${num2} = ${num1 * num2} (Your answer: ${userAnswer})`);
+                }
+                answeredQuestions.add(`${num1}-${num2}`);
+            }
+        }
+
+        function getSelectedNumbers() {
+            const checkboxes = numberSelection.querySelectorAll('input[type="checkbox"]:checked');
+            return Array.from(checkboxes).map(checkbox => parseInt(checkbox.value));
+        }
+
+        function generateQuestion() {
+            const selectedNumbers = getSelectedNumbers();
+            if (answeredQuestions.size < totalQuestions && selectedNumbers.length > 0) {
+                do {
+                    num1 = selectedNumbers[Math.floor(Math.random() * selectedNumbers.length)];
+                    num2 = selectedNumbers[Math.floor(Math.random() * selectedNumbers.length)];
+                } while (answeredQuestions.has(`${num1}-${num2}`));
+
+                document.getElementById('question').innerText = `What is ${num1} x ${num2}?`;
+                answerInput.focus();
+            } else {
+                stopTimer();
+                document.getElementById('question').innerText = 'Game over!';
+                document.getElementById('result').innerText = `You got ${score} out of ${totalQuestions} questions right.`;
+                if (incorrectAnswers.length > 0) {
+                    document.getElementById('incorrect-answers').innerHTML = '<h3>Incorrect Answers:</h3>' + incorrectAnswers.join('<br>');
+                }
+                answerInput.style.display = 'none';
+                document.querySelector('button').innerText = 'Restart';
+                document.querySelector('button').onclick = restartGame;
+            }
+        }
+
+        function submitAnswer() {
+            const userAnswer = parseInt(answerInput.value);
+            if (!isNaN(userAnswer)) {
+                const correctAnswer = num1 * num2;
+                if (userAnswer === correctAnswer) {
+                    document.getElementById('result').innerText = 'Correct!';
+                    score++;
+                    highlightBox(num1, num2, true);
+                } else {
+                    document.getElementById('result').innerText = `Incorrect! The correct answer was ${correctAnswer}.`;
+                    highlightBox(num1, num2, false, userAnswer);
+                }
+                currentQuestion++;
+                answerInput.value = '';
+                generateQuestion();
+            } else {
+                document.getElementById('result').innerText = 'Invalid input! Please enter a number.';
+                answerInput.value = '';
+            }
+        }
+
+        function startGame() {
+            const selectedNumbers = getSelectedNumbers();
+            totalQuestions = selectedNumbers.length * selectedNumbers.length;
+            startButton.style.display = 'none';
+            document.getElementById('settings').style.display = 'none';
+            gameElements.style.display = 'flex';
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 1000);
+            incorrectAnswers = [];
+            createGrid(selectedNumbers);
+            generateQuestion();
+            answerInput.focus();
+            answerInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    submitAnswer();
+                }
+            });
+        }
+
+        function updateTimer() {
+            const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+            timerElement.innerText = `Time: ${elapsedTime} seconds`;
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+        }
+
+        function restartGame() {
+            score = 0;
+            currentQuestion = 0;
+            answeredQuestions.clear();
+            incorrectAnswers = [];
+            document.getElementById('result').innerText = '';
+            document.getElementById('incorrect-answers').innerText = '';
+            answerInput.style.display = 'block';
+            document.querySelector('button').innerText = 'Submit';
+            document.querySelector('button').onclick = submitAnswer;
+            document.querySelectorAll('.multiplication-box').forEach(box => box.classList.remove('correct', 'incorrect'));
+            startGame();
+        }
+    </script>
+</body>
+</html>
