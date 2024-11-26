@@ -52,11 +52,6 @@
             font-weight: normal;
             background-color: #e0e0e0;
         }
-        .faded-text {
-            color: #a0a0a0;
-            font-weight: normal;
-            background-color: transparent;
-        }
         #question {
             font-size: 1.5em;
             margin: 20px;
@@ -72,10 +67,6 @@
             display: none;
             flex-direction: column;
             align-items: center;
-        }
-        #incorrect-answers {
-            margin-top: 20px;
-            color: #f08080;
         }
     </style>
 </head>
@@ -104,7 +95,6 @@
         <input type="number" id="answer" placeholder="Your answer" />
         <button onclick="submitAnswer()" style="padding: 10px 20px; margin-top: 10px;">Submit</button>
         <div id="result"></div>
-        <div id="incorrect-answers"></div>
     </div>
 
     <script>
@@ -121,7 +111,6 @@
         const numberSelection = document.getElementById('number-selection');
         const answeredQuestions = new Set();
         let totalQuestions;
-        let incorrectAnswers = [];
 
         function createGrid(selectedNumbers) {
             grid.innerHTML = '';
@@ -134,7 +123,7 @@
                 if (selectedNumbers.includes(i)) {
                     header.style.fontWeight = 'bold';
                 } else {
-                    header.classList.add('faded-text');
+                    header.classList.add('faded');
                 }
                 header.innerText = i;
                 grid.appendChild(header);
@@ -144,11 +133,7 @@
             for (let i = 1; i <= 10; i++) {
                 const rowHeader = document.createElement('div');
                 rowHeader.classList.add('row-header');
-                if (selectedNumbers.includes(i)) {
-                    rowHeader.style.fontWeight = 'bold';
-                } else {
-                    rowHeader.classList.add('faded-text');
-                }
+                rowHeader.style.fontWeight = 'bold';
                 rowHeader.innerText = i;
                 grid.appendChild(rowHeader);
 
@@ -157,7 +142,7 @@
                     box.classList.add('multiplication-box');
                     box.id = `box-${i}-${j}`;
                     box.innerText = `${i}x${j}`;
-                    if (!selectedNumbers.includes(i) || !selectedNumbers.includes(j)) {
+                    if (!selectedNumbers.includes(j)) {
                         box.classList.add('faded');
                     }
                     grid.appendChild(box);
@@ -165,14 +150,13 @@
             }
         }
 
-        function highlightBox(num1, num2, correct, userAnswer) {
+        function highlightBox(num1, num2, correct) {
             const box = document.getElementById(`box-${num1}-${num2}`);
             if (box) {
                 if (correct) {
                     box.classList.add('correct');
                 } else {
                     box.classList.add('incorrect');
-                    incorrectAnswers.push(`${num1} x ${num2} = ${num1 * num2} (Your answer: ${userAnswer})`);
                 }
                 answeredQuestions.add(`${num1}-${num2}`);
             }
@@ -197,9 +181,6 @@
                 stopTimer();
                 document.getElementById('question').innerText = 'Game over!';
                 document.getElementById('result').innerText = `You got ${score} out of ${totalQuestions} questions right.`;
-                if (incorrectAnswers.length > 0) {
-                    document.getElementById('incorrect-answers').innerHTML = '<h3>Incorrect Answers:</h3>' + incorrectAnswers.join('<br>');
-                }
                 answerInput.style.display = 'none';
                 document.querySelector('button').innerText = 'Restart';
                 document.querySelector('button').onclick = restartGame;
@@ -216,7 +197,7 @@
                     highlightBox(num1, num2, true);
                 } else {
                     document.getElementById('result').innerText = `Incorrect! The correct answer was ${correctAnswer}.`;
-                    highlightBox(num1, num2, false, userAnswer);
+                    highlightBox(num1, num2, false);
                 }
                 currentQuestion++;
                 answerInput.value = '';
@@ -235,7 +216,6 @@
             gameElements.style.display = 'flex';
             startTime = Date.now();
             timerInterval = setInterval(updateTimer, 1000);
-            incorrectAnswers = [];
             createGrid(selectedNumbers);
             generateQuestion();
             answerInput.focus();
@@ -259,9 +239,7 @@
             score = 0;
             currentQuestion = 0;
             answeredQuestions.clear();
-            incorrectAnswers = [];
             document.getElementById('result').innerText = '';
-            document.getElementById('incorrect-answers').innerText = '';
             answerInput.style.display = 'block';
             document.querySelector('button').innerText = 'Submit';
             document.querySelector('button').onclick = submitAnswer;
