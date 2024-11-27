@@ -106,6 +106,10 @@
         .number-btn:hover, .number-btn:focus, .number-btn-wide:hover, .number-btn-wide:focus {
             background-color: #a9a9a9;
         }
+        /* Hide number pad by default */
+        #number-pad {
+            display: none;
+        }
 
         @media (max-width: 600px) {
             .multiplication-box {
@@ -128,10 +132,6 @@
             }
         }
 
-        /* Hide number pad by default */
-        #number-pad {
-            display: none;
-        }
 
         /* Make the answer input editable on larger screens */
         @media (min-width: 601px) {
@@ -327,6 +327,10 @@
                 answerInput.setAttribute('readonly', true);
             }
         }
+
+        // Call setupInputField initially and on resize
+        window.addEventListener('load', setupInputField);
+        window.addEventListener('resize', setupInputField);
 
         function startGame() {
             setupInputField()
