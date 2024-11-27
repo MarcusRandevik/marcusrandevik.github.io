@@ -45,7 +45,7 @@
             width: 45px;
             height: 45px;
             background-color: transparent;
-            color: #a0a0a0;
+            color: #000000;
         }
         .faded {
             color: #a0a0a0;
@@ -77,6 +77,35 @@
             margin-top: 20px;
             color: #f08080;
         }
+        #number-pad {
+            margin-top: 10px;
+        }
+
+        .number-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 5px;
+        }
+
+        .number-btn, .number-btn-wide {
+            width: 45px;
+            height: 45px;
+            margin: 2px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            background-color: #d3d3d3;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .number-btn-wide {
+            width: 100px;
+        }
+
+        .number-btn:hover, .number-btn:focus, .number-btn-wide:hover, .number-btn-wide:focus {
+            background-color: #a9a9a9;
+        }
 
         @media (max-width: 600px) {
             .multiplication-box {
@@ -93,11 +122,27 @@
                 gap: 5px;
                 grid-template-columns: 20px repeat(10, 30px);
             }
+            /* Show number pad only on mobile */
+            #number-pad {
+                display: block;
+            }
+        }
+
+        /* Hide number pad by default */
+        #number-pad {
+            display: none;
+        }
+
+        /* Make the answer input editable on larger screens */
+        @media (min-width: 601px) {
+            #answer {
+                pointer-events: auto;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>Multiplication Game</h1>
+    <img src="https://github.com/MarcusRandevik/marcusrandevik.github.io/blob/main/multo-monster.png?raw=true" alt="Placeholder Image" width="300" height="220">
     <div id="settings">
         <h3>Select numbers to include:</h3>
         <div id="number-selection">
@@ -118,8 +163,27 @@
     <div id="game-elements">
         <div id="multiplication-grid"></div>
         <div id="question"></div>
-        <input type="number" id="answer" placeholder="Your answer" />
-        <button id="submit-button" onclick="submitAnswer()" style="padding: 10px 20px; margin-top: 10px;">Submit</button>
+        <input id="answer" placeholder="Your answer" readonly/>
+        <div id="number-pad">
+            <div class="number-row">
+                <button class="number-btn" onclick="appendNumber(0)">0</button>
+                <button class="number-btn" onclick="appendNumber(1)">1</button>
+                <button class="number-btn" onclick="appendNumber(2)">2</button>
+                <button class="number-btn" onclick="appendNumber(3)">3</button>
+                <button class="number-btn" onclick="appendNumber(4)">4</button>
+            </div>
+            <div class="number-row">
+                <button class="number-btn" onclick="appendNumber(5)">5</button>
+                <button class="number-btn" onclick="appendNumber(6)">6</button>
+                <button class="number-btn" onclick="appendNumber(7)">7</button>
+                <button class="number-btn" onclick="appendNumber(8)">8</button>
+                <button class="number-btn" onclick="appendNumber(9)">9</button>
+            </div>
+            <div class="number-row">
+                <button id="clear-button" class="number-btn-wide" onclick="clearAnswer()">Clear</button>
+                <button id="submit-button" class="number-btn-wide" onclick="submitAnswer()">Submit</button>
+            </div>
+        </div>
         <div id="result"></div>
         <div id="incorrect-answers"></div>
     </div>
@@ -255,7 +319,17 @@
             }
         }
 
+        function setupInputField() {
+            const answerInput = document.getElementById('answer');
+            if (window.innerWidth > 600) {
+                answerInput.removeAttribute('readonly');
+            } else {
+                answerInput.setAttribute('readonly', true);
+            }
+        }
+
         function startGame() {
+            setupInputField()
             const selectedNumbers = getSelectedNumbers();
             totalQuestions = selectedNumbers.length * 10;
             startButton.style.display = 'none';
@@ -298,6 +372,16 @@
             document.querySelector('submit-button').onclick = submitAnswer;
             document.querySelectorAll('.multiplication-box').forEach(box => box.classList.remove('correct', 'incorrect'));
             startGame();
+        }
+
+        function appendNumber(number) {
+            const answerInput = document.getElementById('answer');
+            answerInput.value += number;
+        }
+
+        function clearAnswer() {
+            const answerInput = document.getElementById('answer');
+            answerInput.value = '';
         }
     </script>
 </body>
