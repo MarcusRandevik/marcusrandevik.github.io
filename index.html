@@ -57,9 +57,19 @@
             font-weight: normal;
             background-color: transparent;
         }
+
+        #question-container {
+            display: flex;
+            align-items: center;
+            /* Adjust the spacing and layout as needed */
+        }
         #question {
             font-size: 1.5em;
             margin: 20px;
+        }
+        #answer {
+            font-size: 1.5em;
+            width: 100px;
         }
         #result {
             margin-top: 20px;
@@ -142,7 +152,7 @@
     </style>
 </head>
 <body>
-    <img src="https://github.com/MarcusRandevik/marcusrandevik.github.io/blob/main/multo-monster.png?raw=true" alt="Placeholder Image" width="300" height="220">
+    <img src="https://github.com/MarcusRandevik/marcusrandevik.github.io/blob/main/multo-monster.png?raw=true" alt="Multo Monster" width="200" height="130">
     <div id="settings">
         <h3>Select numbers to include:</h3>
         <div id="number-selection">
@@ -162,8 +172,11 @@
     <div id="timer"></div>
     <div id="game-elements">
         <div id="multiplication-grid"></div>
-        <div id="question"></div>
-        <input id="answer" placeholder="Your answer" readonly/>
+
+        <div id="question-container">
+            <div id="question"></div>
+            <input id="answer" readonly />
+        </div>
         <div id="number-pad">
             <div class="number-row">
                 <button class="number-btn" onclick="appendNumber(0)">0</button>
@@ -282,7 +295,7 @@
                     num2 = selectedNumbers[Math.floor(Math.random() * selectedNumbers.length)];
                 } while (answeredQuestions.has(`${num1}-${num2}`));
 
-                document.getElementById('question').innerText = `What is ${num1} x ${num2}?`;
+                document.getElementById('question').innerText = `${num1} x ${num2} =`;
                 answerInput.focus();
             } else {
                 stopTimer();
@@ -387,6 +400,15 @@
             const answerInput = document.getElementById('answer');
             answerInput.value = '';
         }
+
+        // Pause and play background music on window blur and focus
+        window.addEventListener('blur', () => {
+            backgroundSong.pause();
+        });
+
+        window.addEventListener('focus', () => {
+            backgroundSong.play();
+        });
     </script>
 </body>
 </html>
