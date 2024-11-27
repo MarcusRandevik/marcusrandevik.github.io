@@ -49,10 +49,6 @@ The **Multiplication Monster Game** transforms learning multiplication tables in
 
 We welcome contributions to make the game even better! Feel free to submit pull requests with new features, bug fixes, or improvements.
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ---
 
 Let's make learning multiplication tables fun for everyone with the Multiplication Monster Game!🎉🧮👾
